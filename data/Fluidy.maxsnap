@@ -1,0 +1,47 @@
+{
+	"filetype" : "C74Snapshot",
+	"version" : 2,
+	"minorversion" : 0,
+	"name" : "Fluidy",
+	"origin" : "Fluidy",
+	"type" : "patcher",
+	"subtype" : "Undefined",
+	"embed" : 1,
+	"snapshot" : 	{
+		"valuedictionary" : 		{
+			"parameter_values" : 			{
+				"Blue mode" : 0.0,
+				"Blue multiply" : 1.0,
+				"Green mode" : 0.0,
+				"Green multiply" : 1.0,
+				"Hue" : 1.0,
+				"Luminance" : 1.0,
+				"Red mode" : 0.0,
+				"Red multiply" : 1.0,
+				"Saturation" : 1.0,
+				"bloom-amount" : 1.0,
+				"bloom-exposure" : 1.0,
+				"bloom-threshold" : 1.0,
+				"enable-spacebar-reset" : 1.0,
+				"gswitch2[2]" : 1.0,
+				"iterations" : 10.0,
+				"lightdir-x" : 1.0,
+				"lightdir-y" : 1.0,
+				"lightdir-z" : 2.0,
+				"lightgrad" : 10.0,
+				"simulation-pump" : 5.0,
+				"simulation-speed" : 1.0,
+				"source-fade" : 0.0,
+				"specular-power" : 30.0,
+				"blob" : 				{
+					"range[17]" : [ 1 ],
+					"swatch" : [ 1.0, 1.0, 1.0, 1.0, 0.486486486486487, 1.0, 1.0 ]
+				}
+
+			}
+
+		}
+
+	}
+
+}

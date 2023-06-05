@@ -1,0 +1,144 @@
+<jittershader name="stripes">
+    <param name="modelViewProjectionMatrix" type="mat4" state="MODELVIEW_PROJECTION_MATRIX" />
+    <param name="textureMatrix0" type="mat4" state="TEXTURE0_MATRIX" />
+    <param name="position" type="vec3" state="POSITION" />
+    <param name="texcoord" type="vec2" state="TEXCOORD" />
+    <param name="iResolution" type="vec2" state="TEXDIM0" />
+    <param name="iMouse" type="vec4" default="0 0 0 0" />
+    <param name="iTime" type="float" default="0" />
+	<param name="iChannel0" type="int" default="0" />
+
+    <param name="grad" type="float" default="120." />
+    <param name="specpow" type="float" default="36." />
+    <param name="lightdir" type="vec3" default="1 1 2" />
+    <param name="lightcol" type="vec4" default="1 1 1 1" />
+
+    <language name="glsl" version="1.5">
+    	<include source="mb.common.glsl" program="fp" />
+        <bind param="modelViewProjectionMatrix" program="vp" />
+        <bind param="textureMatrix0" program="vp" />
+        <bind param="position" program="vp" />
+        <bind param="texcoord" program="vp" />
+        <bind param="iTime" program="fp" />
+        <bind param="iMouse" program="fp" />
+        <bind param="iResolution" program="fp" />
+		<bind param="iChannel0" program="fp" />
+
+        <bind param="grad" program="fp" />
+        <bind param="specpow" program="fp" />
+        <bind param="lightdir" program="fp" />
+        <bind param="lightcol" program="fp" />
+
+		<program name="vp" type="vertex"  >
+		<![CDATA[
+			#version 330 core
+			
+			in vec3 position;
+			in vec2 texcoord;
+			out jit_PerVertex {
+				vec2 texcoord;
+			} jit_out;
+			uniform mat4 modelViewProjectionMatrix;
+			uniform mat4 textureMatrix0;
+			
+			void main(void) {
+				gl_Position = modelViewProjectionMatrix*vec4(position, 1.);
+				jit_out.texcoord = vec2(textureMatrix0*vec4(texcoord, 0., 1.));
+			}
+		]]>
+		</program>      
+        <program name="fp" type="fragment"  >
+        <![CDATA[
+            #version 330 core
+            
+            in jit_PerVertex {
+                vec2 texcoord;
+            } jit_in;
+            out vec4 outColor;
+
+            uniform float iTime;
+            uniform vec2 iResolution;
+            uniform vec4 iMouse;
+
+			// modify uniform samplers as necessary
+			uniform sampler2D iChannel0;
+
+            uniform float grad;
+            uniform float specpow;
+            uniform vec3 lightdir;
+            uniform vec4 lightcol;
+
+// <<<<<<<<< START SHADERTOY PASTE
+/*
+    For long-time Shadertoyers, you may notice that this bears a striking
+    resemblance to Florian Berger's "Spilled" shader here: 
+        https://www.shadertoy.com/view/MsGSRd
+
+    I've used the same visualization code for the sake of comparison
+    (and of course convenience).
+
+    In the spite of the visual similarity, the CFD algorithm itself bears 
+    nothing at all in common at first glance. Nonetheless, the resemblance
+    is not a coincidence. This is not at all obvious without some fairly
+    deep analysis, but Florian's shader and mine are actually both 
+    approximations of the same distribution, which boils down to sums of
+    second partial derivatives, which can be found here in the viscous stress 
+    portion of the filtered Navier-Stokes equations:
+    https://en.wikipedia.org/wiki/Large_eddy_simulation
+
+    I may be wrong on this relation to Navier-Stokes, tell me if you
+    know otherwise.
+
+    At any rate, benchmarking this using Shadertoy Unofficial Plugin, here:
+        https://github.com/patuwwy/ShaderToy-Chrome-Plugin
+    it can run at about 2400fps at 800x450, which is the default resolution 
+    for me without going in fullscreen, or about 1100fps at 1200x675 on a 980Ti
+    (64x paint calls). Pretty good! It runs well at 4K widescreen, but I'm not 
+    sure how to benchmark that in a browser.
+*/
+
+// This license applies to the visualization code below:
+/* 
+    Created by florian berger (flockaroo) - 2016
+    License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+*/
+
+float getVal(vec2 uv)
+{
+    return length(texture(iChannel0,uv).xyz);
+}
+    
+vec2 getGrad(vec2 uv,float delta)
+{
+    vec2 d=vec2(delta,0);
+    return vec2(
+        getVal(uv+d.xy)-getVal(uv-d.xy),
+        getVal(uv+d.yx)-getVal(uv-d.yx)
+    )/delta;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 uv = fragCoord.xy / iResolution.xy;
+    vec3 n = vec3(getGrad(uv,1.0/iResolution.y),grad);
+    //n *= n;
+    n=normalize(n);
+    fragColor=vec4(n,1);
+    vec3 light = normalize(lightdir);
+    vec4 diff = lightcol * clamp(dot(n,light),0.5,1.0);
+    float spec=clamp(dot(reflect(light,n),vec3(0,0,-1)),0.0,1.0);
+    spec=pow(spec,specpow)*1.0;
+    //spec=0.0;
+    fragColor = texture(iChannel0,uv) * diff + vec4(spec);
+}
+
+
+// <<<<<<<<< END SHADERTOY PASTE
+
+			void main(void) {                
+				mainImage(outColor, jit_in.texcoord.st*iResolution);
+			}
+        ]]>
+        </program>
+    </language>
+</jittershader>
